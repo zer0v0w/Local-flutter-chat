@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -108,17 +109,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF020617),
 
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-
-        title: const Text(
-          "Local Dev Assistant",
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
 
       body: Column(
         children: [
@@ -153,18 +143,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       borderRadius: BorderRadius.circular(22),
 
-                      border: Border.all(
-                        color: Colors.white.withAlpha(15),
-                      ),
                     ),
-
                     child: MarkdownBody(
                       selectable: true,
 
                       data: message.text.isEmpty &&
                           loading &&
                           index == messages.length - 1
-                          ? "▌"
+                          ? "thinking..."
                           : message.text,
 
                       styleSheet: MarkdownStyleSheet(
@@ -206,7 +192,6 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(16),
 
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(8),
 
               border: Border(
                 top: BorderSide(
@@ -299,12 +284,10 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
     final code = element.textContent;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
 
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
 
-        borderRadius: BorderRadius.circular(18),
 
         border: Border.all(
           color: Colors.white.withAlpha(15),
@@ -346,10 +329,16 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
                   label: "Copy",
 
                   onTap: () async {
+
+
+
                     await Clipboard.setData(
                       ClipboardData(text: code),
                     );
+
+
                   },
+
                 ),
 
                 const SizedBox(width: 8),
@@ -442,5 +431,62 @@ class _CodeActionButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+
+class HoverText extends StatefulWidget {
+  final String text;
+
+  const HoverText({super.key, required this.text});
+
+  @override
+  State<HoverText> createState() => _HoverTextState();
+}
+
+class _HoverTextState extends State<HoverText> {
+  final Set<int> hovered = {};
+
+  void _setHover(int index, bool value) {
+    setState(() {
+      if (value) {
+        hovered.add(index);
+      } else {
+        hovered.remove(index);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 24),
+        children: List.generate(widget.text.length, (index) {
+          final letter = widget.text[index];
+          final isHovered = hovered.contains(index);
+
+          return WidgetSpan(
+            child: MouseRegion(
+              onEnter: (_) => _setHover(index, true),
+              onExit: (_) => _setHover(index, false),
+              child: GestureDetector(
+                onTap: () {
+                  // TODO: tap action per letter
+                },
+                child: Text(
+                  letter,
+                  style: TextStyle(
+                    color: isHovered ? Colors.black : Colors.grey.shade300,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+
   }
 }
